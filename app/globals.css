@@ -11,8 +11,8 @@
   --foreground: var(--color-charcoal);
   --surface: #f8edd9;
   --border: #d9c7ac;
-  --primary: var(--color-violet);
-  --secondary: var(--color-sage);
+  --primary: var(--color-sage);
+  --secondary: var(--color-violet);
   --accent: var(--color-coral);
 }
 
