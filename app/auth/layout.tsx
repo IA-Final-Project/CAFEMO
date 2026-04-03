@@ -26,7 +26,6 @@ export default function AuthLayout({
           Pull up a chair, settle in, and we&apos;ll keep your favorite sips and
           cravings close.
         </p>
-
         <section className="mt-8">{children}</section>
       </main>
     </div>
