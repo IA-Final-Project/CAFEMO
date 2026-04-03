@@ -1,3 +1,4 @@
+import menuData from "@/app/kiosk/menu.json";
 import { NextResponse } from "next/server";
 
 type ApiChatMessage = {
@@ -7,8 +8,32 @@ type ApiChatMessage = {
 
 const FINALIZED_TOKEN = "[FINALIZED]";
 
+type MenuItem = {
+  name: string;
+  price: number;
+};
+
+const MENU_ITEMS: MenuItem[] = [
+  ...menuData.menu.beverages.flatMap((group) => group.items),
+  ...menuData.menu.food,
+  ...menuData.menu.add_ons,
+];
+
+const MENU_TEXT = MENU_ITEMS.map(
+  (item) => `- ${item.name} ($${item.price.toFixed(2)})`,
+).join("\n");
+
 const SYSTEM_PROMPT = [
   "You are CAFEMO, a warm and concise kiosk ordering assistant.",
+  "You are ONLY for taking cafe orders from the exact menu below.",
+  "Menu (exact names and prices):",
+  MENU_TEXT,
+  "Task rules:",
+  "- If a user requests an item not in the menu, gently ask them to check the menu and order from available items only.",
+  "- If a user asks for anything unrelated to ordering, gently explain you are only for cafe ordering tasks.",
+  "- Emotional chats are allowed only when still connected to coffee/ordering recommendations (for example: feeling sad today, or having a great day).",
+  "- Any recommendation must be real menu items listed above.",
+  "- Never invent items, prices, or gibberish names.",
   "Tone rules:",
   "- Be friendly, short, and clear.",
   "- Ask at most one follow-up question at a time.",
@@ -115,9 +140,14 @@ export async function POST(request: Request) {
 
     const normalized = normalizeReply(rawReply);
 
+    const replyLower = normalized.reply.toLowerCase();
+    const isMenuCorrectionReply =
+      replyLower.includes("not on the menu") ||
+      replyLower.includes("choose from the menu");
+
     return NextResponse.json({
       reply: normalized.reply,
-      isFinalized: normalized.isFinalized,
+      isFinalized: normalized.isFinalized && !isMenuCorrectionReply,
     });
   } catch {
     return NextResponse.json(
