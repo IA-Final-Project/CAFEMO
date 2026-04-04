@@ -17,13 +17,14 @@ type ChatMessage = {
 
 const HERO_SIZE = 250;
 const TYPING_DELAY_MS = 22;
+const dummy = "John Doe";
+const [displayName, setDisplayName] = useState('');
 
 const initialMessages: ChatMessage[] = [
   {
     id: "welcome",
     role: "assistant",
-    content:
-      "Welcome to CAFEMO. Tell me what you’d like today and I’ll help finalize your order.",
+    content: `Hey ${dummy}, welcome to CafeMo. Tell me what you’d like today and I’ll help finalize your order.`,
   },
 ];
 
@@ -60,6 +61,7 @@ export default function KioskClientPage() {
   const [isAnimatingReply, setIsAnimatingReply] = useState(false);
   const [orderStage, setOrderStage] = useState<OrderStage>("GATHERING");
   const [processingStep, setProcessingStep] = useState<string>("");
+  const [displayName, setDisplayName] = useState<String>("");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isMountedRef = useRef(true);
 
@@ -67,6 +69,7 @@ export default function KioskClientPage() {
     setIsHydrated(true);
   }, []);
 
+  
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
@@ -301,7 +304,7 @@ export default function KioskClientPage() {
   }
 
   return (
-    <main className="page-shell min-h-screen px-4 py-8 md:px-8">
+    <main className="px-4 pb-8 pt-6 md:px-8">
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 lg:flex-row">
         <aside className="flex flex-col items-center justify-start px-2 pt-2 text-center lg:w-[360px]">
           <div

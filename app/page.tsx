@@ -31,7 +31,7 @@ export default function Home() {
             Get Started
           </Link>
           <Link            
-            href="/kiosk"
+            href="/dashboard/kiosk"
             className="inline-flex h-11 items-center justify-center rounded-full border border-border px-6 text-sm font-semibold text-foreground transition hover:bg-black/5 cursor-pointer"
           >
             Learn More

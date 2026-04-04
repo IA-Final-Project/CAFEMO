@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Anchor,
   Button,
@@ -10,9 +12,14 @@ import {
   TextInput,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { createClient } from "@/app/utils/supabase/client";
 
 export default function LoginPage() {
-  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
@@ -29,11 +36,31 @@ export default function LoginPage() {
       return;
     }
 
+    setIsSubmitting(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      notifications.show({
+        color: "red",
+        title: "Couldnt sign in",
+        message: error.message,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     notifications.show({
       color: "teal",
       title: "Welcome back",
-      message: "You&apos;re in. Your favorite barista is ready.",
+      message: "You're in. Your favorite barista is ready.",
     });
+
+    router.replace("/dashboard/kiosk");
+    setIsSubmitting(false);
   };
 
   return (
@@ -56,7 +83,13 @@ export default function LoginPage() {
         />
       </Stack>
 
-      <Button type="submit" fullWidth radius="xl" size="md">
+      <Button
+        type="submit"
+        fullWidth
+        radius="xl"
+        size="md"
+        loading={isSubmitting}
+      >
         Sign In
       </Button>
 

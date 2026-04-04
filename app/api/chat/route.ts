@@ -1,4 +1,4 @@
-import menuData from "@/app/kiosk/menu.json";
+import menuData from "@/app/dashboard/kiosk/menu.json";
 import { NextResponse } from "next/server";
 
 type ApiChatMessage = {
