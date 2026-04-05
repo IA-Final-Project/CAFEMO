@@ -3,18 +3,30 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon, ImageSquareIcon } from "@phosphor-icons/react";
 import { useUserStore } from "@/app/lib/store/useUserStore";
 import { mapSupabaseUserToProfile } from "@/app/lib/userProfile";
+import {
+  findTopMatchedMenuItemsByAppearance,
+  formatPrice,
+  resolveMenuImagePath,
+} from "@/app/lib/menu";
 import { createClient } from "@/app/utils/supabase/client";
 
 type OrderStage = "GATHERING" | "PROCESSING" | "COMPLETED" | "CANCELLED";
 type ChatRole = "user" | "assistant";
 
+type ChatMenuCard = {
+  name: string;
+  price: number;
+  imagePath: string | null;
+};
+
 type ChatMessage = {
   id: string;
   role: ChatRole;
   content: string;
+  cards?: ChatMenuCard[];
   uiOnly?: boolean;
   pending?: boolean;
 };
@@ -53,6 +65,14 @@ function hasAssistantCancellationConfirmation(message: string) {
   return /(order (is )?(cancelled|canceled)|canceled this order|cancelled this order)/.test(
     normalized,
   );
+}
+
+function createCardsForMessage(text: string): ChatMenuCard[] {
+  return findTopMatchedMenuItemsByAppearance(text, 3).map((item) => ({
+    name: item.name,
+    price: item.price,
+    imagePath: resolveMenuImagePath(item.name),
+  }));
 }
 
 export default function KioskClientPage() {
@@ -347,6 +367,21 @@ export default function KioskClientPage() {
 
       await animateAssistantReply(placeholderId, assistantReply);
 
+      const assistantCards = createCardsForMessage(assistantReply);
+
+      setMessages((previous) =>
+        previous.map((message) => {
+          if (message.id === placeholderId) {
+            return {
+              ...message,
+              cards: assistantCards,
+            };
+          }
+
+          return message;
+        }),
+      );
+
       if (hasAssistantCancellationConfirmation(assistantReply)) {
         setOrderStage("CANCELLED");
         return;
@@ -448,6 +483,39 @@ export default function KioskClientPage() {
                     style={{ backgroundColor: "#ffffff" }}
                   >
                     {message.content}
+
+                    {message.cards && message.cards.length > 0 && (
+                      <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                        {message.cards.map((card, index) => (
+                          <article
+                            key={`${message.id}-${card.name}-${index}`}
+                            className="glass-card w-32 shrink-0 rounded-xl p-2"
+                          >
+                            <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-white/80">
+                              {card.imagePath ? (
+                                <Image
+                                  src={card.imagePath}
+                                  alt={card.name}
+                                  fill
+                                  sizes="128px"
+                                  className="object-contain p-2"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-[var(--color-charcoal)]/45">
+                                  <ImageSquareIcon size={26} weight="duotone" />
+                                </div>
+                              )}
+                            </div>
+                            <p className="mt-2 line-clamp-2 text-xs font-semibold text-[var(--color-charcoal)]">
+                              {card.name}
+                            </p>
+                            <p className="mt-1 text-xs font-semibold text-[var(--color-violet)]">
+                              {formatPrice(card.price)}
+                            </p>
+                          </article>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               );

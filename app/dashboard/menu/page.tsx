@@ -5,86 +5,17 @@ import {
   ImageSquareIcon,
   PlusCircleIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import menuData from "@/app/dashboard/kiosk/menu.json";
-
-type MenuItem = {
-  name: string;
-  price: number;
-};
-
-type BeverageGroup = {
-  category: string;
-  items: MenuItem[];
-};
-
-const AVAILABLE_MENU_IMAGE_FILES = [
-  "Hot-chocolate.png",
-  "breakfast-burrito.png",
-  "butter-croasaint.png",
-  "cafe-latte.png",
-  "capuccino.png",
-  "extra-shot.png",
-  "flavored-syrup.png",
-  "grilled-ham-cheese-panini.png",
-  "hot-americano.png",
-  "iced-americano.png",
-  "iced-latte.png",
-  "peach-smoothie.png",
-  "plant-based-milk.png",
-] as const;
-
-const IMAGE_FILE_BY_LOWER_NAME = AVAILABLE_MENU_IMAGE_FILES.reduce<
-  Record<string, string>
->((accumulator, fileName) => {
-  accumulator[fileName.toLowerCase()] = fileName;
-  return accumulator;
-}, {});
-
-const IMAGE_ALIASES: Record<string, string> = {
-  americano: "hot-americano.png",
-  "caffe latte": "cafe-latte.png",
-  cappuccino: "capuccino.png",
-  "hot chocolate": "Hot-chocolate.png",
-  "butter croissant": "butter-croasaint.png",
-  "ham and cheese panini": "grilled-ham-cheese-panini.png",
-};
-
-function normalizeLabel(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function toSlug(value: string) {
-  return normalizeLabel(value).replace(/\s+/g, "-");
-}
-
-function resolveImagePath(itemName: string) {
-  const normalized = normalizeLabel(itemName);
-  const aliasFile = IMAGE_ALIASES[normalized];
-
-  if (aliasFile) {
-    return `/menu/${aliasFile}`;
-  }
-
-  const slugFileKey = `${toSlug(itemName)}.png`.toLowerCase();
-  const matchingFile = IMAGE_FILE_BY_LOWER_NAME[slugFileKey];
-  if (matchingFile) {
-    return `/menu/${matchingFile}`;
-  }
-
-  return null;
-}
-
-function formatPrice(price: number) {
-  return `₱${price.toFixed(2)}`;
-}
+import {
+  addOns,
+  beverages,
+  food,
+  formatPrice,
+  resolveMenuImagePath,
+  type MenuItem,
+} from "@/app/lib/menu";
 
 function MenuItemCard({ item }: { item: MenuItem }) {
-  const imagePath = resolveImagePath(item.name);
+  const imagePath = resolveMenuImagePath(item.name);
 
   return (
     <article className="glass-card group rounded-2xl p-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_28px_rgba(72,65,73,0.14)]">
@@ -132,10 +63,6 @@ function MenuGrid({ items }: { items: MenuItem[] }) {
 }
 
 export default function MenuPage() {
-  const beverages = menuData.menu.beverages as BeverageGroup[];
-  const food = menuData.menu.food as MenuItem[];
-  const addOns = menuData.menu.add_ons as MenuItem[];
-
   return (
     <main className="px-4 pb-8 pt-6 md:px-8">
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
